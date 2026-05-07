@@ -111,6 +111,7 @@ export default function TrainingView({ onBack }) {
   const deckTitle = subset === 'All'
     ? category === 'All' ? 'All Science Bowl' : `${category} Review`
     : visibleSubsets.find(item => item.id === subset)?.label || 'Custom Deck'
+  const deckKey = `${category}|${type}|${format}|${subset}|${shuffleSeed}`
 
   return (
     <div className="training-bg">
@@ -128,7 +129,7 @@ export default function TrainingView({ onBack }) {
 
       <header className="training-top-bar">
         <button className="training-back-btn" onClick={onBack} aria-label="Back to home">
-          ← AXIOM
+          AXIOM
         </button>
 
         <span
@@ -206,13 +207,19 @@ export default function TrainingView({ onBack }) {
           </div>
 
           <div className="deck-actions">
-            <button onClick={() => setShuffleSeed(Date.now())}>Shuffle Deck</button>
-            <button onClick={resetDeck}>Reset</button>
+            <button className="axiom-button-secondary" onClick={() => setShuffleSeed(Date.now())}>Shuffle Deck</button>
+            <button className="axiom-button-secondary" onClick={resetDeck}>Reset</button>
           </div>
         </BentoItem>
 
         <BentoItem className="training-bento-deck">
-          <PracticeDeck deck={filteredDeck} index={index} onIndexChange={setIndex} />
+          <PracticeDeck
+            deck={filteredDeck}
+            index={index}
+            onIndexChange={setIndex}
+            onResetFilters={resetDeck}
+            deckKey={deckKey}
+          />
         </BentoItem>
 
         <BentoItem className="training-bento-subsets">

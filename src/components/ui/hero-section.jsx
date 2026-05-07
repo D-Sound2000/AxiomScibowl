@@ -161,28 +161,29 @@ export function Component({ onEnter, onPlay }) {
             style={{ color: colors[50] }}
           >
             <div className="mb-4 md:mb-6">
-              <span className="word" data-delay="1600">Master</span>{" "}
-              <span className="word" data-delay="1750">Science</span>{" "}
-              <span className="word" data-delay="1900">Bowl</span>{" "}
-              <span className="word" data-delay="2050">with</span>{" "}
-              <span className="word" data-delay="2200">AI-powered</span>{" "}
-              <span className="word" data-delay="2350">precision.</span>
+              <span className="word" data-delay="1600">Science</span>{" "}
+              <span className="word" data-delay="1750">Bowl</span>{" "}
+              <span className="word" data-delay="1900">Training</span>{" "}
+              <span className="word" data-delay="2050">Remastered.</span>
             </div>
             <div
               className="text-2xl md:text-3xl lg:text-4xl font-thin leading-relaxed"
               style={{ color: colors[200] }}
             >
-              <span className="word" data-delay="2600">Browse</span>{" "}
-              <span className="word" data-delay="2750">questions,</span>{" "}
-              <span className="word" data-delay="2900">drill</span>{" "}
-              <span className="word" data-delay="3050">flashcards,</span>{" "}
-              <span className="word" data-delay="3200">and</span>{" "}
-              <span className="word" data-delay="3350">surface</span>{" "}
-              <span className="word" data-delay="3500">high-yield</span>{" "}
-              <span className="word" data-delay="3650">topics</span>{" "}
-              <span className="word" data-delay="3800">-</span>{" "}
-              <span className="word" data-delay="3950">all</span>{" "}
-              <span className="word" data-delay="4100">in one place.</span>
+              <span className="word" data-delay="2600">Drill</span>{" "}
+              <span className="word" data-delay="2750">high-yield</span>{" "}
+              <span className="word" data-delay="2900">Science</span>{" "}
+              <span className="word" data-delay="3050">Bowl</span>{" "}
+              <span className="word" data-delay="3200">questions,</span>{" "}
+              <span className="word" data-delay="3350">master</span>{" "}
+              <span className="word" data-delay="3500">weak</span>{" "}
+              <span className="word" data-delay="3650">topics,</span>{" "}
+              <span className="word" data-delay="3800">and</span>{" "}
+              <span className="word" data-delay="3950">simulate</span>{" "}
+              <span className="word" data-delay="4100">real</span>{" "}
+              <span className="word" data-delay="4250">rounds</span>{" "}
+              <span className="word" data-delay="4400">with</span>{" "}
+              <span className="word" data-delay="4550">precision.</span>
             </div>
           </h1>
 

@@ -151,6 +151,8 @@ export default function GameView({ onBack, onTraining }) {
   const [wordIndex, setWordIndex] = useState(0)
   const [readingComplete, setReadingComplete] = useState(false)
   const [buzzed, setBuzzed] = useState(false)
+  const [sessionStarted, setSessionStarted] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const visibleSubsets = useMemo(() => {
     const counts = {}
@@ -200,10 +202,12 @@ export default function GameView({ onBack, onTraining }) {
     setAnswer('')
     setResult(null)
     setRunning(nextDeck.length > 0)
+    setSessionStarted(true)
     setTimeLeft(nextDeck[0]?.type === 'Bonus' ? BONUS_TIME : TOSSUP_TIME)
     setWordIndex(0)
     setReadingComplete(false)
     setBuzzed(false)
+    setFiltersOpen(false)
   }
 
   const nextQuestion = () => {
@@ -270,6 +274,7 @@ export default function GameView({ onBack, onTraining }) {
     setWordIndex(0)
     setReadingComplete(false)
     setBuzzed(false)
+    setSessionStarted(false)
   }, [mode, category, subset, format])
 
   useEffect(() => {
@@ -365,80 +370,92 @@ export default function GameView({ onBack, onTraining }) {
             <strong>{formatModeLabel(mode)}</strong>
           </div>
 
-          <div className="game-mode-grid">
-            {MODES.map(item => (
-              <button
-                key={item.id}
-                className={mode === item.id ? 'game-mode-card is-active' : 'game-mode-card'}
-                onClick={() => setMode(item.id)}
-              >
-                <b>{item.label}</b>
-                <span>{item.detail}</span>
-              </button>
-            ))}
-          </div>
+          <button
+            className="game-filter-toggle axiom-button-secondary"
+            onClick={() => setFiltersOpen(value => !value)}
+            aria-expanded={filtersOpen}
+            aria-controls="reader-session-controls"
+          >
+            {filtersOpen ? 'Hide Setup' : 'Show Setup'}
+          </button>
 
-          <div className="filter-group">
-            <span className="filter-label">Category</span>
-            <div className="segmented-wrap">
-              {['All', ...CATEGORIES].map(item => (
-                <button
-                  key={item}
-                  className={category === item ? 'is-active' : ''}
-                  onClick={() => { setCategory(item); setSubset('All') }}
-                  disabled={mode === 'game' && item !== 'All'}
-                >
-                  {item === 'All' ? 'All' : CAT_ABBR[item]}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="filter-group">
-            <span className="filter-label">Subcategory</span>
-            <div className="subset-row">
-              <button className={subset === 'All' ? 'is-active' : ''} onClick={() => setSubset('All')}>All</button>
-              {visibleSubsets.slice(0, 12).map(item => (
+          <div id="reader-session-controls" className={filtersOpen ? 'game-filter-drawer is-open' : 'game-filter-drawer'}>
+            <div className="game-mode-grid">
+              {MODES.map(item => (
                 <button
                   key={item.id}
-                  className={subset === item.id ? 'is-active' : ''}
-                  onClick={() => setSubset(item.id)}
-                  disabled={mode === 'game'}
+                  className={mode === item.id ? 'game-mode-card is-active' : 'game-mode-card'}
+                  onClick={() => setMode(item.id)}
+                  aria-pressed={mode === item.id}
                 >
-                  {item.label}
+                  <b>{item.label}</b>
+                  <span>{item.detail}</span>
                 </button>
               ))}
             </div>
-          </div>
 
-          <div className="filter-group">
-            <span className="filter-label">Format</span>
-            <div className="segmented-wrap">
-              {FORMAT_OPTIONS.map(item => (
-                <button key={item} className={format === item ? 'is-active' : ''} onClick={() => setFormat(item)}>
-                  {item === 'Multiple Choice' ? 'MCQ' : item === 'Short Answer' ? 'Short' : 'All'}
-                </button>
-              ))}
+            <div className="filter-group">
+              <span className="filter-label">Category</span>
+              <div className="segmented-wrap">
+                {['All', ...CATEGORIES].map(item => (
+                  <button
+                    key={item}
+                    className={category === item ? 'is-active' : ''}
+                    onClick={() => { setCategory(item); setSubset('All') }}
+                    disabled={mode === 'game' && item !== 'All'}
+                  >
+                    {item === 'All' ? 'All' : CAT_ABBR[item]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="filter-group">
+              <span className="filter-label">Subcategory</span>
+              <div className="subset-row">
+                <button className={subset === 'All' ? 'is-active' : ''} onClick={() => setSubset('All')}>All</button>
+                {visibleSubsets.slice(0, 12).map(item => (
+                  <button
+                    key={item.id}
+                    className={subset === item.id ? 'is-active' : ''}
+                    onClick={() => setSubset(item.id)}
+                    disabled={mode === 'game'}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="filter-group">
+              <span className="filter-label">Format</span>
+              <div className="segmented-wrap">
+                {FORMAT_OPTIONS.map(item => (
+                  <button key={item} className={format === item ? 'is-active' : ''} onClick={() => setFormat(item)}>
+                    {item === 'Multiple Choice' ? 'MCQ' : item === 'Short Answer' ? 'Short' : 'All'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="filter-group reader-speed-control">
+              <span className="filter-label">Reader speed</span>
+              <div className="wpm-row">
+                <input
+                  aria-label="Reader words per minute"
+                  type="range"
+                  min={MIN_WPM}
+                  max={MAX_WPM}
+                  step="10"
+                  value={readerWpm}
+                  onChange={event => setReaderWpm(Number(event.target.value))}
+                />
+                <output>{readerWpm} WPM</output>
+              </div>
             </div>
           </div>
 
-          <div className="filter-group reader-speed-control">
-            <span className="filter-label">Reader speed</span>
-            <div className="wpm-row">
-              <input
-                aria-label="Reader words per minute"
-                type="range"
-                min={MIN_WPM}
-                max={MAX_WPM}
-                step="10"
-                value={readerWpm}
-                onChange={event => setReaderWpm(Number(event.target.value))}
-              />
-              <output>{readerWpm} WPM</output>
-            </div>
-          </div>
-
-          <LiquidButton onClick={startDeck} size="xl" className="game-start-button">
+          <LiquidButton onClick={startDeck} size="xl" className="game-start-button axiom-button-primary">
             {deck.length ? 'RESTART SESSION' : 'START SESSION'}
           </LiquidButton>
         </section>
@@ -468,8 +485,26 @@ export default function GameView({ onBack, onTraining }) {
               >
                 {!currentQuestion ? (
                   <div className="reader-empty">
-                    <span className="font-mono">{gameComplete ? 'COMPLETE' : 'READY'}</span>
-                    <p>{gameComplete ? 'Session complete. Restart for a fresh randomized set.' : 'Choose a mode and start a randomized session.'}</p>
+                    {!sessionStarted ? (
+                      <div className="reader-onboarding">
+                        <span className="font-mono">HOW IT WORKS</span>
+                        <h2>Build a round, then read like match day.</h2>
+                        <div className="reader-steps">
+                          <p><b>1</b><span>Choose a mode</span></p>
+                          <p><b>2</b><span>Pick subjects/subtopics</span></p>
+                          <p><b>3</b><span>Start a timed reader session</span></p>
+                        </div>
+                        <div className="ghost-question-card" aria-hidden="true">
+                          <small>Sample preview</small>
+                          <p>TOSSUP: Which organelle is the primary site of ATP production in eukaryotic cells?</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="font-mono">{gameComplete ? 'COMPLETE' : 'READY'}</span>
+                        <p>{gameComplete ? 'Session complete. Restart for a fresh randomized set.' : 'No questions match this setup. Adjust filters or restart with a broader set.'}</p>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <>
@@ -500,7 +535,7 @@ export default function GameView({ onBack, onTraining }) {
             <LiquidButton onClick={buzzIn} size="lg" disabled={!canBuzz} className="reader-buzz-button">
               BUZZ
             </LiquidButton>
-            <LiquidButton onClick={submitAnswer} size="lg" disabled={!currentQuestion || !!result || !readingComplete}>
+            <LiquidButton onClick={submitAnswer} size="lg" disabled={!currentQuestion || !!result || !readingComplete} className="axiom-button-primary">
               SUBMIT
             </LiquidButton>
           </div>
@@ -518,10 +553,10 @@ export default function GameView({ onBack, onTraining }) {
 
         <aside className="game-panel game-score-panel">
           <div className="score-grid">
-            <div><b>{score}</b><span>Points</span></div>
-            <div><b>{correct}</b><span>Correct</span></div>
-            <div><b>{seen}</b><span>Seen</span></div>
-            <div><b>{mode === 'game' ? `${Math.min(index + 1, 18)}/18` : `${Math.min(index + 1, deck.length)}/${deck.length}`}</b><span>Progress</span></div>
+            <motion.div key={`score-${score}`} className="stat-tile" initial={{ scale: 0.985 }} animate={{ scale: 1 }} transition={{ duration: 0.18 }}><b>{score}</b><span>Points</span></motion.div>
+            <motion.div key={`correct-${correct}`} className="stat-tile" initial={{ scale: 0.985 }} animate={{ scale: 1 }} transition={{ duration: 0.18 }}><b>{correct}</b><span>Correct</span></motion.div>
+            <motion.div key={`seen-${seen}`} className="stat-tile" initial={{ scale: 0.985 }} animate={{ scale: 1 }} transition={{ duration: 0.18 }}><b>{seen}</b><span>Seen</span></motion.div>
+            <motion.div key={`progress-${index}-${activeBonus?.id || 'base'}`} className="stat-tile" initial={{ scale: 0.985 }} animate={{ scale: 1 }} transition={{ duration: 0.18 }}><b>{mode === 'game' ? `${Math.min(index + 1, 18)}/18` : `${Math.min(index + 1, deck.length)}/${deck.length}`}</b><span>Progress</span></motion.div>
           </div>
           <div className="game-rules">
             <span className="font-mono">RULES</span>
@@ -542,8 +577,8 @@ export default function GameView({ onBack, onTraining }) {
               <p>{!currentQuestion ? 'Start a session to load a hidden randomized set.' : 'Upcoming questions stay hidden until they are reached.'}</p>
             </div>
             <div className="control-action-row">
-              <button onClick={buzzIn} disabled={!canBuzz}>Buzz</button>
-              <button onClick={nextQuestion} disabled={!currentQuestion}>Skip</button>
+              <button onClick={buzzIn} disabled={!canBuzz} aria-label="Buzz in now">Buzz</button>
+              <button onClick={nextQuestion} disabled={!currentQuestion} aria-label="Skip current question">Skip</button>
             </div>
             <div className="shortcut-list">
               <span className="font-mono">SHORTCUTS</span>

@@ -1,17 +1,28 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { LiquidButton } from './ui/liquid-glass-button.tsx'
 import { CAT_ABBR } from '../utils/questionSubsets.js'
 
-export default function PracticeDeck({ deck, index, onIndexChange }) {
-  const [flipped, setFlipped] = useState(false)
+export default function PracticeDeck({ deck, index, onIndexChange, onResetFilters, deckKey }) {
+  const [revealed, setRevealed] = useState(false)
+  const [stats, setStats] = useState({ seen: 0, gotIt: 0, missed: 0 })
+  const [seenIds, setSeenIds] = useState(new Set())
+  const [ratedIds, setRatedIds] = useState(new Set())
   const question = deck[index] || null
   const total = deck.length
   const progress = total > 0 ? ((index + 1) / total) * 100 : 0
+  const activeDeckKey = useMemo(() => deckKey || deck.map(item => item.id).join('|'), [deck, deckKey])
 
   useEffect(() => {
-    setFlipped(false)
+    setRevealed(false)
   }, [question?.id])
+
+  useEffect(() => {
+    setRevealed(false)
+    setStats({ seen: 0, gotIt: 0, missed: 0 })
+    setSeenIds(new Set())
+    setRatedIds(new Set())
+  }, [activeDeckKey])
 
   const goPrevious = () => {
     if (!total) return
@@ -23,10 +34,49 @@ export default function PracticeDeck({ deck, index, onIndexChange }) {
     onIndexChange((index + 1) % total)
   }
 
+  const revealAnswer = () => {
+    if (!question) return
+    setRevealed(true)
+    setSeenIds(prev => {
+      if (prev.has(question.id)) return prev
+      const next = new Set(prev)
+      next.add(question.id)
+      setStats(value => ({ ...value, seen: value.seen + 1 }))
+      return next
+    })
+  }
+
+  const markCard = (outcome) => {
+    if (!question) return
+    setRevealed(true)
+    setRatedIds(prev => {
+      if (prev.has(question.id)) return prev
+      const next = new Set(prev)
+      next.add(question.id)
+      setSeenIds(seenPrev => {
+        if (seenPrev.has(question.id)) return seenPrev
+        const nextSeen = new Set(seenPrev)
+        nextSeen.add(question.id)
+        return nextSeen
+      })
+      setStats(value => ({
+        seen: value.seen + (seenIds.has(question.id) ? 0 : 1),
+        gotIt: value.gotIt + (outcome === 'gotIt' ? 1 : 0),
+        missed: value.missed + (outcome === 'missed' ? 1 : 0),
+      }))
+      return next
+    })
+  }
+
+  const markAndNext = (outcome) => {
+    markCard(outcome)
+    window.setTimeout(goNext, 140)
+  }
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.target instanceof HTMLInputElement) return
-      if (event.key === 'ArrowRight') {
+      if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'n') {
         event.preventDefault()
         goNext()
       }
@@ -36,19 +86,37 @@ export default function PracticeDeck({ deck, index, onIndexChange }) {
       }
       if (event.key === ' ' || event.key === 'Enter') {
         event.preventDefault()
-        setFlipped(value => !value)
+        if (revealed) {
+          goNext()
+        } else {
+          revealAnswer()
+        }
+      }
+      if (event.key.toLowerCase() === 'g' && revealed) {
+        event.preventDefault()
+        markAndNext('gotIt')
+      }
+      if (event.key.toLowerCase() === 'm' && revealed) {
+        event.preventDefault()
+        markAndNext('missed')
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [index, total])
+  }, [index, total, revealed, question?.id, ratedIds])
 
   if (!question) {
     return (
       <div className="practice-empty">
         <span className="font-mono">NO MATCHING CARDS</span>
-        <p>Adjust the deck filters or pick another subset.</p>
+        <h3>Nothing matches this deck.</h3>
+        <p>Try widening the topic, question type, format, or subset filters.</p>
+        {onResetFilters && (
+          <button className="axiom-button axiom-button-secondary" onClick={onResetFilters}>
+            Reset Filters
+          </button>
+        )}
       </div>
     )
   }
@@ -67,9 +135,19 @@ export default function PracticeDeck({ deck, index, onIndexChange }) {
         </span>
       </div>
 
-      <button className="practice-card" onClick={() => setFlipped(value => !value)}>
+      <div className="practice-review-stats" aria-label="Flashcard review stats">
+        <span><b>{stats.seen}</b> Seen</span>
+        <span><b>{stats.gotIt}</b> Got it</span>
+        <span><b>{stats.missed}</b> Missed</span>
+      </div>
+
+      <button
+        className={revealed ? 'practice-card is-revealed' : 'practice-card'}
+        onClick={() => revealed ? undefined : revealAnswer()}
+        aria-label={revealed ? 'Flashcard answer revealed' : 'Reveal flashcard answer'}
+      >
         <AnimatePresence mode="wait">
-          {!flipped ? (
+          {!revealed ? (
             <motion.div
               key="front"
               initial={{ opacity: 0, y: 12 }}
@@ -106,16 +184,32 @@ export default function PracticeDeck({ deck, index, onIndexChange }) {
         <span style={{ width: `${progress}%` }} />
       </div>
 
-      <div className="practice-actions">
-        <LiquidButton size="lg" onClick={goPrevious} aria-label="Previous flashcard">
-          ← Previous
-        </LiquidButton>
-        <LiquidButton size="xl" className="practice-flip-btn" onClick={() => setFlipped(value => !value)}>
-          {flipped ? 'Show Question' : 'Reveal Answer'}
-        </LiquidButton>
-        <LiquidButton size="lg" onClick={goNext} aria-label="Next flashcard">
-          Next →
-        </LiquidButton>
+      <div className={revealed ? 'practice-actions is-reviewing' : 'practice-actions'}>
+        {!revealed ? (
+          <>
+            <LiquidButton size="lg" className="axiom-button-secondary" onClick={goPrevious} aria-label="Previous flashcard">
+              Previous
+            </LiquidButton>
+            <LiquidButton size="xl" className="practice-flip-btn axiom-button-primary" onClick={revealAnswer}>
+              Reveal Answer
+            </LiquidButton>
+            <LiquidButton size="lg" className="axiom-button-secondary" onClick={goNext} aria-label="Next flashcard">
+              Next
+            </LiquidButton>
+          </>
+        ) : (
+          <>
+            <LiquidButton size="lg" className="axiom-button-secondary" onClick={() => markAndNext('missed')}>
+              Missed it
+            </LiquidButton>
+            <LiquidButton size="lg" className="axiom-button-primary" onClick={() => markAndNext('gotIt')}>
+              Got it
+            </LiquidButton>
+            <LiquidButton size="lg" className="axiom-button-secondary" onClick={goNext}>
+              Next
+            </LiquidButton>
+          </>
+        )}
       </div>
     </section>
   )
