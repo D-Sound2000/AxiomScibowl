@@ -1,0 +1,16 @@
+{
+  "topics": [
+    { "topicId": "ANT-001", "label": "Integumentary System", "confidence": 0.95 },
+    { "topicId": "ANT-002", "label": "Skeletal System Overview", "confidence": 0.92 },
+    { "topicId": "ANT-003", "label": "Muscular System", "confidence": 0.88 },
+    { "topicId": "ANT-004", "label": "Nervous System", "confidence": 0.91 },
+    { "topicId": "ANT-005", "label": "Endocrine System", "confidence": 0.85 },
+    { "topicId": "DYN-001", "label": "Plate Tectonics", "confidence": 0.94 },
+    { "topicId": "DYN-002", "label": "Seismic Waves", "confidence": 0.89 },
+    { "topicId": "DYN-003", "label": "Rock Cycle", "confidence": 0.87 },
+    { "topicId": "CHM-001", "label": "Periodic Trends", "confidence": 0.93 },
+    { "topicId": "CHM-002", "label": "Chemical Bonding", "confidence": 0.90 },
+    { "topicId": "AST-001", "label": "Stellar Evolution", "confidence": 0.86 },
+    { "topicId": "AST-002", "label": "Solar System Formation", "confidence": 0.88 }
+  ]
+}
